@@ -12,9 +12,9 @@
 
 2. **用户和索引**:
    - 默认管理员用户: root (无密码)
-   - 测试用户: myuser (密码: mypassword)
+   - 测试用户: lanshi (密码: mypassword)
    - 默认索引: root/pypi
-   - 自定义索引: root/myindex
+   - 自定义索引: lanshi/lanshiIndex
 
 3. **uv包管理工具**:
    - 已成功安装并测试
@@ -29,14 +29,14 @@
 ### 使用uv与私有PyPI交互
 ```bash
 # 设置环境变量
-export UV_INDEX_URL=http://localhost:3141/root/myindex/+simple/
+export UV_INDEX_URL=http://localhost:3141/lanshi/lanshiIndex/+simple/
 export UV_EXTRA_INDEX_URL=https://pypi.org/simple/
 
 # 安装包
 uv pip install package_name
 
 # 从私有PyPI安装包并指定索引
-uv pip install --index http://localhost:3141/root/myindex/+simple/ package_name
+uv pip install --index http://localhost:3141/lanshi/lanshiIndex/+simple/ package_name
 ```
 
 ## 验证结果

@@ -28,9 +28,9 @@
 
 ### 默认用户和索引
 - 管理员用户: root (无密码)
-- 测试用户: myuser (密码: mypassword)
+- 测试用户: lanshi (密码: mypassword)
 - 默认索引: root/pypi
-- 自定义索引: myuser/myindex
+- 自定义索引: lanshi/lanshiIndex
 
 ## 使用uv与私有PyPI
 
@@ -38,7 +38,7 @@
 
 #### 方法1：使用环境变量
 ```bash
-export UV_INDEX_URL=http://localhost:3141/myuser/myindex/+simple/
+export UV_INDEX_URL=http://localhost:3141/lanshi/lanshiIndex/+simple/
 export UV_EXTRA_INDEX_URL=https://pypi.org/simple/
 ```
 
@@ -46,7 +46,7 @@ export UV_EXTRA_INDEX_URL=https://pypi.org/simple/
 创建 `uv.toml` 文件:
 ```toml
 [index]
-url = "http://localhost:3141/myuser/myindex/+simple/"
+url = "http://localhost:3141/lanshi/lanshiIndex/+simple/"
 extra-index-url = ["https://pypi.org/simple/"]
 ```
 
@@ -56,10 +56,10 @@ extra-index-url = ["https://pypi.org/simple/"]
 uv pip install package_name
 
 # 从私有PyPI安装包并指定索引
-uv pip install --index http://localhost:3141/myuser/myindex/+simple/ package_name
+uv pip install --index http://localhost:3141/lanshi/lanshiIndex/+simple/ package_name
 
 # 发布包到私有PyPI
-uv publish --repository http://localhost:3141/myuser/myindex/ dist/*
+uv publish --repository http://localhost:3141/lanshi/lanshiIndex/ dist/*
 ```
 
 ## 在项目中使用
@@ -72,7 +72,7 @@ uv pip install -r requirements.txt
 ## 注意事项
 - 确保devpi服务器正在运行
 - 如果使用认证，需要在URL中包含用户名和密码:
-  `http://username:password@localhost:3141/myuser/myindex/+simple/`
+  `http://username:password@localhost:3141/lanshi/lanshiIndex/+simple/`
 - 建议在生产环境中修改默认密码并配置HTTPS
 
 ## 验证部署成功

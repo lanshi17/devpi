@@ -1,0 +1,12 @@
+[tool.uv]
+# 配置uv使用devpi私有PyPI服务器
+index-url = "http://localhost:3141/lanshi/lanshiIndex/+simple/"
+
+# 可选：添加额外的索引URL
+extra-index-url = [
+    "https://pypi.org/simple/",
+    "https://mirrors.aliyun.com/pypi/simple/"
+]
+
+# 信任本地开发服务器（仅用于开发环境）
+trusted-host = ["localhost"]
