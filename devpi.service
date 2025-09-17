@@ -5,7 +5,7 @@ After=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=/media/lanshi/YZS1/devpi
+WorkingDirectory=/media/lanshi/YZS/devpi
 ExecStart=/usr/bin/docker-compose up -d
 ExecStop=/usr/bin/docker-compose down
 ExecReload=/usr/bin/docker-compose restart
