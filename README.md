@@ -5,6 +5,7 @@ A minimal, production-ready Docker-based private PyPI mirror using **devpi-serve
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker)
 ![DevPI](https://img.shields.io/badge/DevPI-Private%20PyPI-green?style=flat)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![中文](https://github.com/lanshi17/devpi/blob/master/README_zh.md)
 
 ## ✨ Features
 
