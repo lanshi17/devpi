@@ -1,7 +1,7 @@
 FROM python:3.8
 
-# Try with official PyPI first, then fallback to mirrors if needed
-RUN pip install devpi-server devpi-client devpi-web
+# Use USTC mirror for pip installation
+RUN pip install -i https://pypi.mirrors.ustc.edu.cn/simple/ devpi-server devpi-client devpi-web
 
 # Create configuration directory
 RUN mkdir -p /root/.devpi/server/

@@ -1,0 +1,21 @@
+[Unit]
+Description=devpi Docker Container Service
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=30
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker stop devpi-container
+ExecStartPre=-/usr/bin/docker rm devpi-container
+ExecStart=/usr/bin/docker run --name devpi-container \
+  -p 3141:3141 \
+  -v /mnt/data/Projects/Tools/Utilities/devpi/data:/root/.devpi/server:z \
+  --restart=always \
+  devpi-image
+ExecStop=/usr/bin/docker stop devpi-container
+
+[Install]
+WantedBy=multi-user.target
