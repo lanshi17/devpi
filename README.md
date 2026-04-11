@@ -1,204 +1,165 @@
-# 🐍 DevPI Private PyPI Mirror
+# DevPI Private PyPI Mirror
 
-A minimal, production-ready Docker-based private PyPI mirror using **devpi-server** with upstream caching from Chinese mirrors for faster package downloads.
+A minimal private PyPI mirror built with `devpi-server`, packaged with the included image build file, and deployed with rootless Podman.
 
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker)
-![DevPI](https://img.shields.io/badge/DevPI-Private%20PyPI-green?style=flat)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![中文](https://github.com/lanshi17/devpi/blob/master/README_zh.md)
+## Features
 
-## ✨ Features
+- Minimal image build from the included image build file
+- Rootless Podman runtime with a fixed data directory at `/home/yangzs/devpi/data`
+- User-level systemd service managed with `systemctl --user`
+- USTC upstream mirror for faster package downloads in China
+- Local package caching for repeat installs
 
-- **🚀 Minimal Setup**: Single Dockerfile, no complex dependencies
-- **🇨🇳 Chinese Mirror Support**: Configured to use USTC PyPI mirror for faster downloads
-- **🔄 Lazy Loading**: Downloads packages only when requested, saving bandwidth and storage
-- **💾 Local Caching**: Automatically caches downloaded packages for fast subsequent access
-- **🌐 Host Network Ready**: Works seamlessly with VPN environments using host networking
-- **🔧 Easy Configuration**: Simple commands for setup and usage
+## Project Structure
 
-## 📁 Project Structure
-
-```
+```text
 devpi/
-├── Dockerfile          # Minimal devpi server configuration
-└── README.md           # This documentation
+├── image-build-file
+├── devpi-container.service
+├── start-devpi.sh
+├── setup_instructions.md
+├── README.md
+└── README_zh.md
 ```
 
-## 🚀 Quick Start
+## Requirements
 
-### 1. Build the Docker Image
+- Podman 4+
+- systemd user services
+- `loginctl` available for linger configuration
+- At least 1 GB free disk space for cached packages
+
+## Quick Start
+
+### 1. Build the image
 
 ```bash
-docker build -t devpi .
+podman build -t devpi-image .
 ```
 
-### 2. Run the DevPI Server
+### 2. Prepare the data directory
 
-**For normal environments:**
 ```bash
-docker run -d --name devpi -p 3141:3141 devpi
+mkdir -p /home/yangzs/devpi/data
 ```
 
-**For VPN environments (recommended):**
+### 3. Run the container manually
+
 ```bash
-docker run -d --name devpi --network host devpi
+podman run -d \
+  --name devpi-container \
+  -p 3141:3141 \
+  -v /home/yangzs/devpi/data:/root/.devpi/server:z \
+  devpi-image
 ```
 
-> **Note**: Use `--network host` if you're behind a VPN or experiencing network connectivity issues.
+### 4. Verify the service
 
-### 3. Verify Installation
-
-Check if the server is running:
 ```bash
 curl http://localhost:3141
 ```
 
-You should see the devpi web interface HTML.
+## Rootless Podman systemd user service
 
-## 🔧 Usage
-
-### Temporary Package Installation
-
-Install packages directly using pip with the `-i` flag:
+Enable linger so the user service can survive logout:
 
 ```bash
-# For normal network mode (-p 3141:3141)
-pip install -i http://localhost:3141/root/pypi/ <package_name> --trusted-host localhost
+loginctl enable-linger <user>
+```
 
-# For host network mode (--network host)
+Install and start the service:
+
+```bash
+mkdir -p ~/.config/systemd/user/
+cp devpi-container.service ~/.config/systemd/user/devpi-container.service
+systemctl --user daemon-reload
+systemctl --user enable --now devpi-container.service
+```
+
+Common management commands:
+
+```bash
+systemctl --user status devpi-container.service
+systemctl --user restart devpi-container.service
+systemctl --user stop devpi-container.service
+journalctl --user -u devpi-container.service -n 50
+```
+
+## Usage
+
+Install packages temporarily:
+
+```bash
 pip install -i http://localhost:3141/root/pypi/ <package_name> --trusted-host localhost
 ```
 
-**Example:**
-```bash
-pip install -i http://localhost:3141/root/pypi/ requests --trusted-host localhost
-```
-
-### Permanent Configuration
-
-Configure pip to always use your devpi mirror:
+Configure pip permanently:
 
 ```bash
 pip config set global.index-url http://localhost:3141/root/pypi/
 pip config set global.trusted-host localhost
 ```
 
-To revert back to default PyPI:
+Revert to default PyPI:
+
 ```bash
 pip config unset global.index-url
 pip config unset global.trusted-host
 ```
 
-## ⚙️ Configuration Details
+## Management Commands
 
-### Upstream Mirror
-- **Mirror URL**: `https://pypi.mirrors.ustc.edu.cn/simple/`
-- **Provider**: University of Science and Technology of China (USTC)
-- **Benefits**: Faster downloads in China, reliable service
+Enter the running container:
 
-### Server Settings
-- **Port**: 3141
-- **Default User**: `root` (no password required)
-- **Default Index**: `root/pypi`
-- **Cache Expiry**: Disabled (`mirror_cache_expiry = 0`) for immediate updates
-
-### Network Modes
-
-| Mode | Command | Use Case |
-|------|---------|----------|
-| **Bridge** | `-p 3141:3141` | Normal environments without VPN |
-| **Host** | `--network host` | VPN environments, network troubleshooting |
-
-## 🔄 How It Works
-
-1. **First Request**: When you request a package, devpi fetches it from the USTC mirror
-2. **Local Cache**: The package is stored locally in the container
-3. **Subsequent Requests**: Future requests are served directly from local cache
-4. **Automatic Updates**: devpi checks for new package versions periodically
-
-This lazy-loading approach saves bandwidth and provides fast local access while maintaining access to the full PyPI ecosystem.
-
-## 🛠️ Management Commands
-
-### Access DevPI CLI (inside container)
 ```bash
-# Enter the container
-docker exec -it devpi bash
-
-# Use devpi commands
-devpi use http://localhost:3141
-devpi login root --password=
-devpi index root/pypi
+podman exec -it devpi-container bash
 ```
 
-### View Server Logs
+View logs:
+
 ```bash
-docker logs devpi
+podman logs devpi-container
 ```
 
-### Stop and Remove
+Stop and remove the container:
+
 ```bash
-docker stop devpi && docker rm devpi
+podman stop devpi-container
+podman rm devpi-container
 ```
 
-## 🌐 Web Interface
+## Configuration Details
 
-Access the devpi web interface at:
-- **Bridge Mode**: [http://localhost:3141](http://localhost:3141)
-- **Host Mode**: [http://localhost:3141](http://localhost:3141)
+- Mirror URL: `https://pypi.mirrors.ustc.edu.cn/simple/`
+- Default user: `root`
+- Default index: `root/pypi`
+- Data directory: `/home/yangzs/devpi/data`
+- Service management: `systemctl --user`
 
-The web interface shows available packages, user management, and server status.
+## Troubleshooting
 
-## 🐛 Troubleshooting
+If the user service does not start:
 
-### Common Issues
-
-**Q: Connection timeout when installing packages**
-- **Solution**: Use `--network host` mode if you're behind a VPN
-- **Alternative**: Ensure your Docker daemon has proper DNS configuration
-
-**Q: Cannot resolve mirror URLs**
-- **Solution**: Check your host's internet connectivity
-- **Verify**: `docker run --rm alpine nslookup pypi.mirrors.ustc.edu.cn`
-
-**Q: Permission denied errors**
-- **Solution**: Add `--trusted-host localhost` to your pip commands
-
-### Testing Connectivity
 ```bash
-# Test basic server access
-curl -s http://localhost:3141 | head -5
-
-# Test package availability
-pip install -i http://localhost:3141/root/pypi/ click==7.0 --trusted-host localhost
+systemctl --user status devpi-container.service
+journalctl --user -u devpi-container.service -n 100
 ```
 
-## 📋 System Requirements
+If the container exits unexpectedly:
 
-- **Docker**: 20.10+
-- **Disk Space**: At least 1GB for package cache
-- **Memory**: 512MB+ recommended
-- **Network**: Internet access for initial package downloads
+```bash
+podman logs devpi-container
+podman ps -a --filter name=devpi-container
+```
 
-## 🤝 Contributing
+If package installs fail, verify the mirror endpoint and local server:
 
-This project follows a minimal philosophy. If you need additional features:
+```bash
+curl -I https://pypi.mirrors.ustc.edu.cn/simple/
+curl http://localhost:3141
+```
 
-1. Fork the repository
-2. Modify the `Dockerfile` as needed
-3. Test thoroughly
-4. Submit a pull request with clear documentation
+## References
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🔗 References
-
-- [Original Tutorial](https://blog.jojo.host/posts/RSKUCql3or/)
 - [DevPI Documentation](https://devpi.net/)
 - [USTC PyPI Mirror](https://mirrors.ustc.edu.cn/help/pypi.html)
-
----
-
-**Enjoy your private PyPI mirror!** 🎉
