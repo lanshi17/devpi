@@ -1,11 +1,11 @@
 # DevPI 私有 PyPI 镜像
 
-这是一个基于 `devpi-server` 的极简私有 PyPI 镜像方案，使用仓库内的镜像构建文件构建镜像，并通过 rootless Podman 部署运行。
+这是一个基于 `devpi-server` 的极简私有 PyPI 镜像方案，使用仓库内的镜像构建文件构建镜像，并通过 Docker 部署运行。
 
 ## 特性
 
 - 使用仓库自带的镜像构建文件构建镜像
-- 使用 rootless Podman 运行容器
+- 使用 Docker 运行容器
 - 统一数据目录为 `/home/yangzs/devpi/data`
 - 通过 `systemctl --user` 管理用户级 systemd 服务
 - 使用 USTC 上游镜像，加快中国大陆环境下的包下载
@@ -25,7 +25,7 @@ devpi/
 
 ## 环境要求
 
-- Podman 4+
+- Docker 24+
 - 支持用户级 systemd 服务
 - 系统提供 `loginctl` 用于 linger 配置
 - 至少 1 GB 可用磁盘空间用于包缓存
@@ -35,7 +35,7 @@ devpi/
 ### 1. 构建镜像
 
 ```bash
-podman build -t devpi-image .
+docker build -t devpi-image .
 ```
 
 ### 2. 准备数据目录
@@ -47,10 +47,10 @@ mkdir -p /home/yangzs/devpi/data
 ### 3. 手动启动容器
 
 ```bash
-podman run -d \
+docker run -d \
   --name devpi-container \
   -p 3141:3141 \
-  -v /home/yangzs/devpi/data:/root/.devpi/server:z \
+  -v /home/yangzs/devpi/data:/root/.devpi/server \
   devpi-image
 ```
 
@@ -60,7 +60,7 @@ podman run -d \
 curl http://localhost:3141
 ```
 
-## Rootless Podman 用户服务
+## Docker 用户服务
 
 为了让用户服务在登出后仍可运行，先启用 linger：
 
@@ -113,20 +113,20 @@ pip config unset global.trusted-host
 进入正在运行的容器：
 
 ```bash
-podman exec -it devpi-container bash
+docker exec -it devpi-container bash
 ```
 
 查看日志：
 
 ```bash
-podman logs devpi-container
+docker logs devpi-container
 ```
 
 停止并删除容器：
 
 ```bash
-podman stop devpi-container
-podman rm devpi-container
+docker stop devpi-container
+docker rm devpi-container
 ```
 
 ## 配置说明
@@ -136,7 +136,7 @@ podman rm devpi-container
 - 默认索引：`root/pypi`
 - 数据目录：`/home/yangzs/devpi/data`
 - 服务管理方式：`systemctl --user`
-- 运行模式：`rootless` Podman
+- 运行模式：Docker
 
 ## 故障排查
 
@@ -150,8 +150,8 @@ journalctl --user -u devpi-container.service -n 100
 如果容器异常退出：
 
 ```bash
-podman logs devpi-container
-podman ps -a --filter name=devpi-container
+docker logs devpi-container
+docker ps -a --filter name=devpi-container
 ```
 
 如果安装包失败，可检查镜像源和本地服务：
@@ -159,6 +159,34 @@ podman ps -a --filter name=devpi-container
 ```bash
 curl -I https://pypi.mirrors.ustc.edu.cn/simple/
 curl http://localhost:3141
+```
+
+### 代理环境下 devpi 失效
+
+开启网络代理后，localhost 流量可能被发送到代理服务器，导致 pip 无法访问本地 devpi。
+解决方法：确保 `no_proxy` 环境变量包含 localhost：
+
+```bash
+# 临时生效
+export no_proxy=localhost,127.0.0.1
+export NO_PROXY=localhost,127.0.0.1
+
+# 永久生效 (添加到 ~/.bashrc 或 ~/.zshrc)
+echo 'export no_proxy=localhost,127.0.0.1' >> ~/.bashrc
+```
+
+容器内的 devpi-server 也需要排除 localhost 代理（已在 Dockerfile 中预设）。
+如果使用自定义代理，启动容器时可传递代理变量：
+
+```bash
+docker run -d \
+  --name devpi-container \
+  -p 3141:3141 \
+  -v /home/yangzs/devpi/data:/root/.devpi/server \
+  -e no_proxy=localhost,127.0.0.1 \
+  -e HTTP_PROXY=http://your-proxy:port \
+  -e HTTPS_PROXY=http://your-proxy:port \
+  devpi-image
 ```
 
 ## 参考资料

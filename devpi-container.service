@@ -1,5 +1,5 @@
 [Unit]
-Description=devpi Podman Container Service
+Description=devpi Docker Container Service
 After=network.target
 
 [Service]
@@ -7,13 +7,13 @@ Type=simple
 Restart=always
 RestartSec=30
 TimeoutStartSec=0
-ExecStartPre=-/usr/bin/podman stop devpi-container
-ExecStartPre=-/usr/bin/podman rm devpi-container
-ExecStart=/usr/bin/podman run --name devpi-container \
+ExecStartPre=-/usr/bin/docker stop devpi-container
+ExecStartPre=-/usr/bin/docker rm devpi-container
+ExecStart=/usr/bin/docker run --name devpi-container \
   -p 3141:3141 \
-  -v /home/yangzs/devpi/data:/root/.devpi/server:z \
-  devpi-image
-ExecStop=/usr/bin/podman stop devpi-container
+  -v /home/yangzs/devpi/data:/root/.devpi/server \
+  devpi-image:latest
+ExecStop=/usr/bin/docker stop devpi-container
 
 [Install]
 WantedBy=default.target

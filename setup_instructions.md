@@ -1,12 +1,12 @@
-# devpi Podman 用户服务部署指南
+# devpi Docker 用户服务部署指南
 
-本文档说明如何使用 rootless Podman 和用户级 systemd 服务部署 devpi。
+本文档说明如何使用 Docker 和用户级 systemd 服务部署 devpi。
 
 ## 1. 构建镜像
 
 ```bash
 cd /home/yangzs/devpi
-podman build -t devpi-image .
+docker build -t devpi-image .
 ```
 
 ## 2. 创建数据目录
@@ -50,14 +50,14 @@ systemctl --user disable devpi-container.service
 
 ## 7. 手动启动容器
 
-如果暂时不想通过 systemd 管理，也可以直接使用 `podman run`：
+如果暂时不想通过 systemd 管理，也可以直接使用 `docker run`：
 
 ```bash
-podman run -d \
+docker run -d \
   --name devpi-container \
   -p 3141:3141 \
-  -v /home/yangzs/devpi/data:/root/.devpi/server:z \
-  devpi-image
+  -v /home/yangzs/devpi/data:/root/.devpi/server \
+  devpi-image:latest
 ```
 
 ## 8. 验证服务
@@ -71,20 +71,20 @@ curl http://localhost:3141
 查看容器日志：
 
 ```bash
-podman logs devpi-container
+docker logs devpi-container
 ```
 
 查看容器状态：
 
 ```bash
-podman ps -a --filter name=devpi-container
+docker ps -a --filter name=devpi-container
 ```
 
 停止并清理容器：
 
 ```bash
 systemctl --user stop devpi-container.service
-podman rm -f devpi-container
+docker rm -f devpi-container
 ```
 
 ## 10. 目录与路径约定

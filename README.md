@@ -1,11 +1,11 @@
 # DevPI Private PyPI Mirror
 
-A minimal private PyPI mirror built with `devpi-server`, packaged with the included image build file, and deployed with rootless Podman.
+A minimal private PyPI mirror built with `devpi-server`, packaged with the included image build file, and deployed with Docker.
 
 ## Features
 
 - Minimal image build from the included image build file
-- Rootless Podman runtime with a fixed data directory at `/home/yangzs/devpi/data`
+- Docker runtime with a fixed data directory at `/home/yangzs/devpi/data`
 - User-level systemd service managed with `systemctl --user`
 - USTC upstream mirror for faster package downloads in China
 - Local package caching for repeat installs
@@ -24,7 +24,7 @@ devpi/
 
 ## Requirements
 
-- Podman 4+
+- Docker 24+
 - systemd user services
 - `loginctl` available for linger configuration
 - At least 1 GB free disk space for cached packages
@@ -34,7 +34,7 @@ devpi/
 ### 1. Build the image
 
 ```bash
-podman build -t devpi-image .
+docker build -t devpi-image .
 ```
 
 ### 2. Prepare the data directory
@@ -46,10 +46,10 @@ mkdir -p /home/yangzs/devpi/data
 ### 3. Run the container manually
 
 ```bash
-podman run -d \
+docker run -d \
   --name devpi-container \
   -p 3141:3141 \
-  -v /home/yangzs/devpi/data:/root/.devpi/server:z \
+  -v /home/yangzs/devpi/data:/root/.devpi/server \
   devpi-image
 ```
 
@@ -59,7 +59,7 @@ podman run -d \
 curl http://localhost:3141
 ```
 
-## Rootless Podman systemd user service
+## Docker systemd user service
 
 Enable linger so the user service can survive logout:
 
@@ -112,20 +112,20 @@ pip config unset global.trusted-host
 Enter the running container:
 
 ```bash
-podman exec -it devpi-container bash
+docker exec -it devpi-container bash
 ```
 
 View logs:
 
 ```bash
-podman logs devpi-container
+docker logs devpi-container
 ```
 
 Stop and remove the container:
 
 ```bash
-podman stop devpi-container
-podman rm devpi-container
+docker stop devpi-container
+docker rm devpi-container
 ```
 
 ## Configuration Details
@@ -148,8 +148,8 @@ journalctl --user -u devpi-container.service -n 100
 If the container exits unexpectedly:
 
 ```bash
-podman logs devpi-container
-podman ps -a --filter name=devpi-container
+docker logs devpi-container
+docker ps -a --filter name=devpi-container
 ```
 
 If package installs fail, verify the mirror endpoint and local server:
@@ -157,6 +157,34 @@ If package installs fail, verify the mirror endpoint and local server:
 ```bash
 curl -I https://pypi.mirrors.ustc.edu.cn/simple/
 curl http://localhost:3141
+```
+
+### devpi not working with a proxy enabled
+
+When a network proxy is active, localhost traffic may be routed through the proxy, causing pip to fail when connecting to local devpi.
+Fix: ensure `no_proxy` includes localhost:
+
+```bash
+# Temporary
+export no_proxy=localhost,127.0.0.1
+export NO_PROXY=localhost,127.0.0.1
+
+# Permanent (add to ~/.bashrc or ~/.zshrc)
+echo 'export no_proxy=localhost,127.0.0.1' >> ~/.bashrc
+```
+
+The container's devpi-server also needs localhost excluded from proxy (already set in Dockerfile).
+To pass custom proxy settings when starting the container:
+
+```bash
+docker run -d \
+  --name devpi-container \
+  -p 3141:3141 \
+  -v /home/yangzs/devpi/data:/root/.devpi/server \
+  -e no_proxy=localhost,127.0.0.1 \
+  -e HTTP_PROXY=http://your-proxy:port \
+  -e HTTPS_PROXY=http://your-proxy:port \
+  devpi-image
 ```
 
 ## References
