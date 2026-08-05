@@ -1,5 +1,10 @@
 # Podman Rootless Migration Implementation Plan
 
+**Status:** completed
+**Created:** 2026-04-10
+**Completed:** 2026-04-18
+**PR:** merged
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Replace Docker-based startup and documentation with Podman-only rootless workflows using a user-level systemd service.

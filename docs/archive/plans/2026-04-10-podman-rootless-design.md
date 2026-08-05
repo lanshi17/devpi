@@ -1,5 +1,10 @@
 # DevPI Podman Rootless Migration Design
 
+**Status:** completed
+**Created:** 2026-04-10
+**Completed:** 2026-04-18
+**PR:** merged
+
 ## Goal
 将项目从 Docker-only 启动方式迁移为 Podman-only，并默认采用 rootless Podman + 用户级 systemd service。
 
