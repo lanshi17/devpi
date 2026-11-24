@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # devpi 容器启动脚本
+# 服务端调优参数(线程数/连接上限)已内置在镜像 ENTRYPOINT 中。
 CONTAINER_NAME="devpi-container"
 IMAGE_NAME="devpi-image:latest"
 PORT="3141"
@@ -10,7 +11,7 @@ DATA_DIR="/home/yangzs/devpi/data"
 mkdir -p "$DATA_DIR"
 
 # 停止并删除已存在的容器
-docker stop "$CONTAINER_NAME" 2>/dev/null
+docker stop -t 30 "$CONTAINER_NAME" 2>/dev/null
 docker rm "$CONTAINER_NAME" 2>/dev/null
 
 # 启动新容器
@@ -19,6 +20,8 @@ docker run -d \
   --name "$CONTAINER_NAME" \
   -p "$PORT":"$PORT" \
   -v "$DATA_DIR":/root/.devpi/server \
+  --log-opt max-size=10m \
+  --log-opt max-file=3 \
   --restart=always \
   -e no_proxy=localhost,127.0.0.1 \
   -e NO_PROXY=localhost,127.0.0.1 \

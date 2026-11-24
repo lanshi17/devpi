@@ -7,7 +7,8 @@ A minimal private PyPI mirror built with `devpi-server`, packaged with the inclu
 - Minimal image build from the included image build file
 - Docker runtime with a fixed data directory at `/home/yangzs/devpi/data`
 - User-level systemd service managed with `systemctl --user`
-- USTC upstream mirror for faster package downloads in China
+- Upstream mirror configured per index in the devpi DB (currently `https://pypi.org/simple/`)
+- Tuned runtime: 8 serving threads, bounded connection limit, rotated container logs
 - Local package caching for repeat installs
 
 ## Project Structure
@@ -130,7 +131,8 @@ docker rm devpi-container
 
 ## Configuration Details
 
-- Mirror URL: `https://pypi.mirrors.ustc.edu.cn/simple/`
+- Mirror URL: `https://pypi.org/simple/` (stored per index; change with `devpi index root/pypi mirror_url=...`)
+- Serving: `--threads=8 --connection-limit=20` (baked into the image ENTRYPOINT)
 - Default user: `root`
 - Default index: `root/pypi`
 - Data directory: `/home/yangzs/devpi/data`
@@ -155,7 +157,7 @@ docker ps -a --filter name=devpi-container
 If package installs fail, verify the mirror endpoint and local server:
 
 ```bash
-curl -I https://pypi.mirrors.ustc.edu.cn/simple/
+curl -I https://pypi.org/simple/
 curl http://localhost:3141
 ```
 
@@ -190,4 +192,4 @@ docker run -d \
 ## References
 
 - [DevPI Documentation](https://devpi.net/)
-- [USTC PyPI Mirror](https://mirrors.ustc.edu.cn/help/pypi.html)
+- [PyPI Simple Index](https://pypi.org/simple/)

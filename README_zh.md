@@ -8,7 +8,8 @@
 - 使用 Docker 运行容器
 - 统一数据目录为 `/home/yangzs/devpi/data`
 - 通过 `systemctl --user` 管理用户级 systemd 服务
-- 使用 USTC 上游镜像，加快中国大陆环境下的包下载
+- 上游镜像按索引配置保存在 devpi 数据库（当前为 `https://pypi.org/simple/`）
+- 运行参数已调优：8 个服务线程、连接上限、容器日志轮转
 - 本地缓存已下载的包，提升后续安装速度
 
 ## 项目结构
@@ -131,7 +132,8 @@ docker rm devpi-container
 
 ## 配置说明
 
-- 上游镜像：`https://pypi.mirrors.ustc.edu.cn/simple/`
+- 上游镜像：`https://pypi.org/simple/`（按索引存储，可用 `devpi index root/pypi mirror_url=...` 修改）
+- 服务参数：`--threads=8 --connection-limit=20`（已固化在镜像 ENTRYPOINT）
 - 默认用户：`root`
 - 默认索引：`root/pypi`
 - 数据目录：`/home/yangzs/devpi/data`
@@ -157,7 +159,7 @@ docker ps -a --filter name=devpi-container
 如果安装包失败，可检查镜像源和本地服务：
 
 ```bash
-curl -I https://pypi.mirrors.ustc.edu.cn/simple/
+curl -I https://pypi.org/simple/
 curl http://localhost:3141
 ```
 
@@ -192,4 +194,4 @@ docker run -d \
 ## 参考资料
 
 - [DevPI Documentation](https://devpi.net/)
-- [USTC PyPI Mirror](https://mirrors.ustc.edu.cn/help/pypi.html)
+- [PyPI Simple Index](https://pypi.org/simple/)

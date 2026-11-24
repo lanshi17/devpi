@@ -5,15 +5,17 @@ After=network.target
 [Service]
 Type=simple
 Restart=always
-RestartSec=30
+RestartSec=10
 TimeoutStartSec=0
-ExecStartPre=-/usr/bin/docker stop devpi-container
+ExecStartPre=-/usr/bin/docker stop -t 30 devpi-container
 ExecStartPre=-/usr/bin/docker rm devpi-container
 ExecStart=/usr/bin/docker run --name devpi-container \
   -p 3141:3141 \
   -v /home/yangzs/devpi/data:/root/.devpi/server \
+  --log-opt max-size=10m \
+  --log-opt max-file=3 \
   devpi-image:latest
-ExecStop=/usr/bin/docker stop devpi-container
+ExecStop=/usr/bin/docker stop -t 30 devpi-container
 
 [Install]
 WantedBy=default.target
