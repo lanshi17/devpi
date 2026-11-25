@@ -5,14 +5,14 @@
 ## 1. 构建镜像
 
 ```bash
-cd /home/yangzs/devpi
+cd /path/to/devpi
 docker build -t devpi-image .
 ```
 
 ## 2. 创建数据目录
 
 ```bash
-mkdir -p /home/yangzs/devpi/data
+mkdir -p /path/to/devpi/data
 ```
 
 ## 3. 启用 linger
@@ -27,10 +27,12 @@ loginctl enable-linger <user>
 
 ```bash
 mkdir -p ~/.config/systemd/user/
-cp /home/yangzs/devpi/devpi-container.service ~/.config/systemd/user/devpi-container.service
+cp /path/to/devpi/devpi-container.service ~/.config/systemd/user/devpi-container.service
 systemctl --user daemon-reload
 systemctl --user enable --now devpi-container.service
 ```
+
+> `devpi-container.service` 里的 `-v` 是绝对路径。仓库不在 `/mnt/data/Projects/Tools/Utilities/devpi` 时，先改成实际路径再启用服务。
 
 ## 5. 检查服务状态
 
@@ -55,8 +57,8 @@ systemctl --user disable devpi-container.service
 ```bash
 docker run -d \
   --name devpi-container \
-  -p 3141:3141 \
-  -v /home/yangzs/devpi/data:/root/.devpi/server \
+  -p 127.0.0.1:3141:3141 \
+  -v /path/to/devpi/data:/root/.devpi/server \
   devpi-image:latest
 ```
 
@@ -89,7 +91,7 @@ docker rm -f devpi-container
 
 ## 10. 目录与路径约定
 
-- 项目目录：`/home/yangzs/devpi`
-- 数据目录：`/home/yangzs/devpi/data`
+- 项目目录：`/path/to/devpi`
+- 数据目录：`/path/to/devpi/data`
 - 用户服务目录：`~/.config/systemd/user/`
 - 服务管理命令：`systemctl --user`

@@ -6,7 +6,7 @@
 
 - 使用仓库自带的镜像构建文件构建镜像
 - 使用 Docker 运行容器
-- 统一数据目录为 `/home/yangzs/devpi/data`
+- 统一数据目录为 `$PWD/data`
 - 通过 `systemctl --user` 管理用户级 systemd 服务
 - 上游镜像按索引配置保存在 devpi 数据库（当前为 `https://pypi.org/simple/`）
 - 运行参数已调优：8 个服务线程、连接上限、容器日志轮转
@@ -42,7 +42,7 @@ docker build -t devpi-image .
 ### 2. 准备数据目录
 
 ```bash
-mkdir -p /home/yangzs/devpi/data
+mkdir -p $PWD/data
 ```
 
 ### 3. 手动启动容器
@@ -50,8 +50,8 @@ mkdir -p /home/yangzs/devpi/data
 ```bash
 docker run -d \
   --name devpi-container \
-  -p 3141:3141 \
-  -v /home/yangzs/devpi/data:/root/.devpi/server \
+  -p 127.0.0.1:3141:3141 \
+  -v $PWD/data:/root/.devpi/server \
   devpi-image
 ```
 
@@ -136,7 +136,7 @@ docker rm devpi-container
 - 服务参数：`--threads=8 --connection-limit=20`（已固化在镜像 ENTRYPOINT）
 - 默认用户：`root`
 - 默认索引：`root/pypi`
-- 数据目录：`/home/yangzs/devpi/data`
+- 数据目录：`$PWD/data`
 - 服务管理方式：`systemctl --user`
 - 运行模式：Docker
 
@@ -183,8 +183,8 @@ echo 'export no_proxy=localhost,127.0.0.1' >> ~/.bashrc
 ```bash
 docker run -d \
   --name devpi-container \
-  -p 3141:3141 \
-  -v /home/yangzs/devpi/data:/root/.devpi/server \
+  -p 127.0.0.1:3141:3141 \
+  -v $PWD/data:/root/.devpi/server \
   -e no_proxy=localhost,127.0.0.1 \
   -e HTTP_PROXY=http://your-proxy:port \
   -e HTTPS_PROXY=http://your-proxy:port \

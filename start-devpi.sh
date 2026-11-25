@@ -5,7 +5,9 @@
 CONTAINER_NAME="devpi-container"
 IMAGE_NAME="devpi-image:latest"
 PORT="3141"
-DATA_DIR="/home/yangzs/devpi/data"
+# 数据目录固定为仓库内的 data/, 重建容器不会丢包(.gitignore 已忽略)
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DATA_DIR="$BASE_DIR/data"
 
 # 创建数据目录
 mkdir -p "$DATA_DIR"
@@ -18,7 +20,7 @@ docker rm "$CONTAINER_NAME" 2>/dev/null
 # 传递宿主机代理设置,但确保 localhost 不走代理
 docker run -d \
   --name "$CONTAINER_NAME" \
-  -p "$PORT":"$PORT" \
+  -p "127.0.0.1:$PORT":3141 \
   -v "$DATA_DIR":/root/.devpi/server \
   --log-opt max-size=10m \
   --log-opt max-file=3 \

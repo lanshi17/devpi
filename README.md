@@ -5,7 +5,7 @@ A minimal private PyPI mirror built with `devpi-server`, packaged with the inclu
 ## Features
 
 - Minimal image build from the included image build file
-- Docker runtime with a fixed data directory at `/home/yangzs/devpi/data`
+- Docker runtime with a fixed data directory at `$PWD/data`
 - User-level systemd service managed with `systemctl --user`
 - Upstream mirror configured per index in the devpi DB (currently `https://pypi.org/simple/`)
 - Tuned runtime: 8 serving threads, bounded connection limit, rotated container logs
@@ -41,7 +41,7 @@ docker build -t devpi-image .
 ### 2. Prepare the data directory
 
 ```bash
-mkdir -p /home/yangzs/devpi/data
+mkdir -p $PWD/data
 ```
 
 ### 3. Run the container manually
@@ -49,8 +49,8 @@ mkdir -p /home/yangzs/devpi/data
 ```bash
 docker run -d \
   --name devpi-container \
-  -p 3141:3141 \
-  -v /home/yangzs/devpi/data:/root/.devpi/server \
+  -p 127.0.0.1:3141:3141 \
+  -v $PWD/data:/root/.devpi/server \
   devpi-image
 ```
 
@@ -135,7 +135,7 @@ docker rm devpi-container
 - Serving: `--threads=8 --connection-limit=20` (baked into the image ENTRYPOINT)
 - Default user: `root`
 - Default index: `root/pypi`
-- Data directory: `/home/yangzs/devpi/data`
+- Data directory: `$PWD/data`
 - Service management: `systemctl --user`
 
 ## Troubleshooting
@@ -181,8 +181,8 @@ To pass custom proxy settings when starting the container:
 ```bash
 docker run -d \
   --name devpi-container \
-  -p 3141:3141 \
-  -v /home/yangzs/devpi/data:/root/.devpi/server \
+  -p 127.0.0.1:3141:3141 \
+  -v $PWD/data:/root/.devpi/server \
   -e no_proxy=localhost,127.0.0.1 \
   -e HTTP_PROXY=http://your-proxy:port \
   -e HTTPS_PROXY=http://your-proxy:port \
